@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Appointment Management</title>
+	<link rel="stylesheet" type="text/css" href="styles/appointments.css" media="screen" />
+	<script src="/scripts/jquery-2.0.3.js"></script>
+	<script src="/scripts/jquery-tmpl.js"></script>
+	<script src="/scripts/jquery.validate.js"></script>
+	<script src="/scripts/jquery-serialization.js"></script>
+	<script src="/scripts/appointments.js"></script>
+	<script src="/scripts/date.js"></script>
+</head>
+<body>
+	<header></header>
+	<main id="content">
+		<section id="error">	</section>
+	
+		<!-- ADD SECTION -->
+		<nav><a href="#" id="btnNew">NEW</a></nav>
+		<nav><a href="#" id="btnAdd">ADD&nbsp;</a> &nbsp;&nbsp; <a href="#" id="btnCancel">CANCEL</a></nav>
+		<section id="new">
+			<form id="appointmentForm" class="not">
+				<div>
+					<label>DATE</label> <input type="date" required="required"
+					name="date" class="large" placeholder="Appointment Date" maxlength="200"/>
+					<label>TIME</label> <input type="time" required="required"
+					name="time" class="large" placeholder="Appointment Time" maxlength="200"/>
+					<label>DESC</label> <input class="large" id="description" type="text"
+									required="required" name="description"
+									placeholder=" filter by description ..." />
+				</div>
+			</form>
+		</section>
+		<section id="search">
+			<div><input type="text" id="criteria" class="large"/>
+				<nav><a href="#" id="btnSearch">SEARCH</a></nav></div>
+			<table id="tblAppointments">
+				<colgroup>
+					<col width="20%">
+					<col width="20%">
+					<col width="60%">
+				</colgroup>
+				<thead>
+					<tr>
+						<th>DATE</th>
+						<th>TIME</th>
+						<th>DESCRIPTION</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</section>
+	</main>
+	<footer></footer>
+</body>
+</html>
