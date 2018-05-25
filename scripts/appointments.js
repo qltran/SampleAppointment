@@ -6,7 +6,28 @@ $(function() {
 	if ($('#tblAppointments tr').length > 0) {
 		$('#tblAppointments').removeClass("not");
 	}
+	
+	// Do validation before submit form
+	$( "#appointmentForm" ).submit(function( event ) {
+		if (!checkDate()){
+			event.preventDefault();
+		} else {
+			$( "#appointmentForm" ).submit();
+		}
+	});
 });
+
+function checkDate() {
+	var selectedText = $("input[name*='date']").val() + ' ' + $("input[name*='time']").val();
+	var selectedDate = new Date(selectedText);
+	var now = new Date();
+	if (selectedDate < now) {
+		$("#error").empty();
+		$("<label>").text('Appointment time should be in the future!').addClass("error").appendTo($("#error"));
+		return false;
+	}
+	return true;
+ }
 
 function visibleAddAppointment(){
 	$("#divNew").addClass("not");
@@ -60,5 +81,5 @@ function formatDate(date) {
 	var day = date.getDate();
 	var midx = date.getMonth();
 	var year = date.getFullYear();
-	return day + ' ' + months[midx] + ' ' + year;
+	return months[midx] + '-' + day + '-' + year;
 }

@@ -7,7 +7,7 @@ use DBI;
 
 use MIME::Types;
 use DateTime;
-use Time::Piece;
+use DateTime::Format::DateParse;
 
 {
 	package AppointmentServer;
@@ -90,21 +90,34 @@ use Time::Piece;
 		}
 	}
 
-	# TODO ADD COMMENT
+	# Query all appointments and insert HTML rows into existing table
 	sub insert_appointment_rows {
 		my ($html) = @_;
 
 		my $dbh = DBI->connect($server,$user,$password) or die "Can't connect to database: $DBI::errstr";
-		my $sql = qq/select time, description from appointments/;
+		my $sql = qq/SELECT time, description FROM appointments ORDER BY time/;
 		my $sth = $dbh->prepare($sql);
 		$sth->execute();
 
 		my $rows;
 		while (my $row = $sth->fetchrow_arrayref()){
-			#my $time = Time::Piece->strptime($row->[0], "%Y-%m-%d %H-%M-%s");
-
-			$rows .= qq\<tr> <td>$row->[0]</td> <td>B</td> <td>C</td> </tr>\;
+			my $time = DateTime::Format::DateParse->parse_datetime($row->[0]);
+			my $day = $time->day;
+			my $month = $time->month_name;
+			my $hour = $time->hour;
+			my $minute = $time->minute;
+			my $minutestr = $minute < 10? '0'. $minute: $minute;
+			my $year = $time->year;
+			$rows .= qq\<tr>
+					<td>$month-$day-$year </td>
+					<td>$hour:$minutestr</td>
+					<td>$row->[1]</td>
+				</tr>\;
 		}
+
+
+		$dbh-> disconnect();
+
 		my $idx = index($html, qq\</tbody>\);
 
 		my $pre_html = substr $html, 0, $idx - 1;
@@ -135,7 +148,7 @@ use Time::Piece;
 		my $dbh = DBI->connect($server,$user,$password) or die "Can't connect to database: $DBI::errstr";
 
 		# Query appointments
-		my $sql = qq/select time, description from appointments where description like '%$criteria%'/;
+		my $sql = qq/SELECT time, description FROM appointments WHERE description like '%$criteria%' ORDER BY time/;
 		my $sth = $dbh->prepare($sql);
 		$sth->execute();
 

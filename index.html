@@ -19,13 +19,13 @@
 		<!-- ADD SECTION -->
 		<div id="divNew"><nav><a href="#" id="btnNew">NEW</a></nav></div>
 		<section id="new">
-			<form id="appointmentForm" class="not">
+			<form id="appointmentForm" class="not" method="POST">
 				<input type="submit" id="btnAdd" value="ADD&nbsp;"/> &nbsp;&nbsp; <input type="reset" id="btnCancel" value="CANCEL"/>
 				<div>
 					<label>DATE</label> <input type="date" required="required"
-					name="date" class="large" placeholder="Appointment Date" maxlength="200"/>
+					name="date" class="large" maxlength="200"/>
 					<label>TIME</label> <input type="time" required="required"
-					name="time" class="large" placeholder="Appointment Time" maxlength="200"/>
+					name="time" class="large" maxlength="200"/>
 					<label>DESC</label> <input class="large" id="description" type="text"
 									required="required" name="description"
 									placeholder=" description ..." />
