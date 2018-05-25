@@ -6,10 +6,17 @@ use JSON;
 use DBI;
 
 use MIME::Types;
+use DateTime;
+use Time::Piece;
+
 {
 	package AppointmentServer;
 	use HTTP::Server::Simple::CGI;
 	use base qw(HTTP::Server::Simple::CGI);
+
+	my $user = q/root/;
+	my $password = q/12345678/;
+	my $server = qq/dbi:mysql:appointment_db/;
 
 	my %dispatch = (
 		'/search' => \&build_appointments_json,
@@ -36,7 +43,6 @@ use MIME::Types;
 
 		# If this is a reference to a sub, the result is whatever the sub does
 		if ( ref($handler) eq "CODE" ) {
-			print "HTTP/1.0 200 OK\r\n";
 			$handler->($cgi);
 		} elsif ( -e $filename ) {
 			# Serve a file, if it exists.
@@ -49,6 +55,7 @@ use MIME::Types;
 				print "Content-type: text/html\r\n";
 				print "\r\n<h1>500 Server Error</h1><p>$filename: $!</p>\r\n";
 			} else {
+				# Default HTML for both init screen and after add
 				binmode FILE;
 				my ( $buf, $n, $data );
 				my ($len) = 0;
@@ -61,6 +68,16 @@ use MIME::Types;
 				print "Content-type: $type\r\n";
 				print "Content-length: $len\r\n";
 				print "\r\n";
+
+				# Check if this request is adding new appointment
+				my $date = $cgi->param('date');
+				my $time = $cgi->param('time');
+				my $description = $cgi->param('description');
+				if (defined $date && defined $time && defined $description) { # Add new appointment
+					add_new_appointment($date, $time, $description);
+					$data = insert_appointment_rows($data);
+				}
+
 				print $data;
 			}
 		} else {
@@ -73,17 +90,49 @@ use MIME::Types;
 		}
 	}
 
+	# TODO ADD COMMENT
+	sub insert_appointment_rows {
+		my ($html) = @_;
+
+		my $dbh = DBI->connect($server,$user,$password) or die "Can't connect to database: $DBI::errstr";
+		my $sql = qq/select time, description from appointments/;
+		my $sth = $dbh->prepare($sql);
+		$sth->execute();
+
+		my $rows;
+		while (my $row = $sth->fetchrow_arrayref()){
+			#my $time = Time::Piece->strptime($row->[0], "%Y-%m-%d %H-%M-%s");
+
+			$rows .= qq\<tr> <td>$row->[0]</td> <td>B</td> <td>C</td> </tr>\;
+		}
+		my $idx = index($html, qq\</tbody>\);
+
+		my $pre_html = substr $html, 0, $idx - 1;
+		my $pos_html = substr $html, $idx - 1;
+
+		return $pre_html . $rows . $pos_html  ;
+	}
+
+	# Connect to database then insert new appointment
+	sub add_new_appointment {
+		my $dbh = DBI->connect($server,$user,$password) or die "Can't connect to database: $DBI::errstr";
+		my ($date, $time, $description) = @_;
+		my $appointment_time = $date . ' ' . $time;
+		my $sql = qq/insert into appointments(time, description) values ('$appointment_time', '$description') /;
+		my $sth = $dbh->prepare($sql);
+		$sth->execute();
+		$dbh-> disconnect();
+	}
+
+	# Connect to database then query all appointments filtered by the criteria
 	sub build_appointments_json {
-		my $cgi = shift;    # CGI.pm object
+		my $cgi = shift;
 		return if !ref $cgi;
 
 		my $criteria   = $cgi->param('criteria');
 
 		# Connect SQL Server
-		my $user = q/root/;
-		my $password = q/12345678/;
-		my $dbh = DBI->connect("dbi:mysql:appointment_db",$user,$password)
-		    or die "Can't connect to database: $DBI::errstr";
+		my $dbh = DBI->connect($server,$user,$password) or die "Can't connect to database: $DBI::errstr";
 
 		# Query appointments
 		my $sql = qq/select time, description from appointments where description like '%$criteria%'/;
@@ -105,7 +154,7 @@ use MIME::Types;
 
 		$dbh-> disconnect();
 
-		print $cgi->header('application/json');
+		# print $cgi->header('application/json');
 		print $json_text;
 	}
 
