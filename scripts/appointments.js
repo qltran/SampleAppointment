@@ -3,7 +3,7 @@ $(function() {
 	$("#btnNew").click(visibleAddAppointment);
 	$("#btnCancel").click(hideAddAppointment);
 	
-	if ($('#tblAppointments tr').length > 0) {
+	if ($('#tblAppointments tr').length > 1) {
 		$('#tblAppointments').removeClass("not");
 	}
 	
@@ -81,5 +81,5 @@ function formatDate(date) {
 	var day = date.getDate();
 	var midx = date.getMonth();
 	var year = date.getFullYear();
-	return months[midx] + '-' + day + '-' + year;
+	return months[midx] + ' ' + day + ' ' + year;
 }

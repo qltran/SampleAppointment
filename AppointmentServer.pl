@@ -14,9 +14,11 @@ use DateTime::Format::DateParse;
 	use HTTP::Server::Simple::CGI;
 	use base qw(HTTP::Server::Simple::CGI);
 
+	####### CONFIGURATION FOR DATABASE ################
 	my $user = q/root/;
 	my $password = q/12345678/;
 	my $server = qq/dbi:mysql:appointment_db/;
+	###################################################
 
 	my %dispatch = (
 		'/search' => \&build_appointments_json,
@@ -30,32 +32,25 @@ use DateTime::Format::DateParse;
 		my $path    = $cgi->path_info();
 		my $handler = $dispatch{$path};
 
-		# Get rid of leading/trailing slashes on path
+		# Handle path info
 		my ($filename) = $path;
 		$filename =~ s/^\///;
 		$filename =~ s/\/$//;
-
-		# If not filename, index this directory
 		$filename = "." if ( length($filename) == 0 );
-
-		# If path points to a directory
 		$filename = $filename . "/index.html" if ( -d $filename && -e $filename . "/index.html" );
 
-		# If this is a reference to a sub, the result is whatever the sub does
-		if ( ref($handler) eq "CODE" ) {
+		if ( ref($handler)  eq "CODE" ) { # Dispatch to handler with specific path
 			$handler->($cgi);
-		} elsif ( -e $filename ) {
-			# Serve a file, if it exists.
+		} elsif ( -e $filename ) { # Read file if exists
 			my ($mt)   = MIME::Types->new();
 			my ($type) = $mt->mimeTypeOf($filename);
 
-			# Read the file
 			if ( !open FILE, "<$filename" ) {
 				print "HTTP/1.0 500 Error\r\n";
 				print "Content-type: text/html\r\n";
 				print "\r\n<h1>500 Server Error</h1><p>$filename: $!</p>\r\n";
 			} else {
-				# Default HTML for both init screen and after add
+				# Default HTML page index
 				binmode FILE;
 				my ( $buf, $n, $data );
 				my ($len) = 0;
@@ -73,11 +68,12 @@ use DateTime::Format::DateParse;
 				my $date = $cgi->param('date');
 				my $time = $cgi->param('time');
 				my $description = $cgi->param('description');
-				if (defined $date && defined $time && defined $description) { # Add new appointment
+				if (defined $date && defined $time && defined $description) {
+					# Add new appointment
 					add_new_appointment($date, $time, $description);
+					# Load all appointments into table
 					$data = insert_appointment_rows($data);
 				}
-
 				print $data;
 			}
 		} else {
@@ -109,13 +105,11 @@ use DateTime::Format::DateParse;
 			my $minutestr = $minute < 10? '0'. $minute: $minute;
 			my $year = $time->year;
 			$rows .= qq\<tr>
-					<td>$month-$day-$year </td>
+					<td>$month $day $year </td>
 					<td>$hour:$minutestr</td>
 					<td>$row->[1]</td>
 				</tr>\;
 		}
-
-
 		$dbh-> disconnect();
 
 		my $idx = index($html, qq\</tbody>\);
